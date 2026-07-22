@@ -110,7 +110,7 @@ void draw() {
 }
 
 void updatePlaying() {
-  paddle.update();
+  paddle.update(paddleTargetX());
   ball.update();
 
   // Paddle collision (only when ball moving downward)
@@ -136,6 +136,15 @@ void updatePlaying() {
       resetBallAndPaddle();
     }
   }
+}
+
+// Translate raw input (arrow keys, else mouse) into the paddle's desired
+// left-edge X. Keeps input handling in the main tab, out of the Paddle class.
+float paddleTargetX() {
+  if (keyPressed && (keyCode == LEFT || keyCode == RIGHT)) {
+    return paddle.x + (keyCode == LEFT ? -paddle.speed : paddle.speed);
+  }
+  return mouseX - paddle.w / 2;
 }
 
 void checkBrickCollisions() {

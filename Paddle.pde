@@ -16,14 +16,11 @@ class Paddle {
     sprite = img;
   }
 
-  void update() {
-    if (keyPressed && (keyCode == LEFT || keyCode == RIGHT)) {
-      if (keyCode == LEFT) x -= speed;
-      if (keyCode == RIGHT) x += speed;
-    } else {
-      x = mouseX - w / 2;
-    }
-    x = constrain(x, 0, width - w);
+  // Move toward the requested left-edge X, clamped to the screen. Input
+  // acquisition (mouse vs. keys) is the caller's concern, not the paddle's,
+  // so movement policy stays decoupled from the input source.
+  void update(float desiredX) {
+    x = constrain(desiredX, 0, width - w);
 
     if (squashTimer > 0) squashTimer--;
   }
