@@ -84,6 +84,7 @@ void updatePlaying() {
     float speed = sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
     ball.vx = relativeIntersect * speed;
     ball.vy = -sqrt(max(speed * speed - ball.vx * ball.vx, speed * speed * 0.3));
+    paddle.squash();
   }
 
   checkBrickCollisions();
