@@ -33,6 +33,19 @@ void draw() {
   background(20);
   paddle.update();
   ball.update();
+
+  // Paddle collision (only when ball moving downward)
+  if (ball.vy > 0
+      && ball.x + ball.r > paddle.x && ball.x - ball.r < paddle.x + paddle.w
+      && ball.y + ball.r > paddle.y && ball.y - ball.r < paddle.y + paddle.h) {
+    ball.y = paddle.y - ball.r;
+    float relativeIntersect = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+    relativeIntersect = constrain(relativeIntersect, -1, 1);
+    float speed = sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+    ball.vx = relativeIntersect * speed;
+    ball.vy = -sqrt(max(speed * speed - ball.vx * ball.vx, speed * speed * 0.3));
+  }
+
   paddle.display();
   ball.display();
 }
