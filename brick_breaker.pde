@@ -4,8 +4,12 @@
 final int STATE_START = 0;
 final int STATE_PLAYING = 1;
 final int STATE_GAME_OVER = 2;
-final int STATE_WIN = 3;
+final int STATE_WINNING = 3;   // brief transition: let the last fade + burst finish
+final int STATE_WIN = 4;
 int state = STATE_START;
+
+float winTimer = 0;
+final float WIN_DELAY = 45;     // ~0.75s at 60fps
 
 final int COLS = 8;
 final int ROWS = 5;
@@ -85,6 +89,16 @@ void draw() {
     popMatrix();
 
     drawHUD();
+  } else if (state == STATE_WINNING) {
+    // Freeze the ball but keep the last brick's fade and the burst playing out.
+    drawBricks();
+    paddle.display();
+    ball.display();
+    updateAndDrawParticles();
+    drawHUD();
+
+    winTimer--;
+    if (winTimer <= 0) state = STATE_WIN;
   } else if (state == STATE_GAME_OVER) {
     drawBricks();
     drawCenteredScreen("GAME OVER", "Score: " + score + "   -   Click to restart");
@@ -143,7 +157,8 @@ void checkBrickCollisions() {
         }
 
         if (allBricksDestroyed()) {
-          state = STATE_WIN;
+          state = STATE_WINNING;
+          winTimer = WIN_DELAY;
         }
         return; // handle one brick hit per frame
       }
@@ -209,6 +224,7 @@ void resetGame() {
   lives = 3;
   particles.clear();
   shakeTimer = 0;
+  winTimer = 0;
 
   float totalWidth = COLS * (BRICK_W + BRICK_GAP) - BRICK_GAP;
   float offsetLeft = (width - totalWidth) / 2;
