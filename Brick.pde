@@ -2,6 +2,7 @@ class Brick {
   float x, y, w, h;
   PImage sprite;
   int points;
+  color burstColor;   // color of the particle burst when destroyed
   boolean alive = true;
 
   // Death fade-out: plays after the brick is destroyed, under the burst.
@@ -9,13 +10,14 @@ class Brick {
   float deathTimer = 0;
   final float DEATH_FRAMES = 6;
 
-  Brick(float bx, float by, float bw, float bh, PImage img, int pointValue) {
+  Brick(float bx, float by, float bw, float bh, PImage img, int pointValue, color burstCol) {
     x = bx;
     y = by;
     w = bw;
     h = bh;
     sprite = img;
     points = pointValue;
+    burstColor = burstCol;
   }
 
   // Kill the brick: stop colliding/counting immediately, but start the fade.

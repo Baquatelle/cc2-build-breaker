@@ -31,6 +31,7 @@ int[] rowPoints = { 50, 40, 30, 20, 10 };
 Paddle paddle;
 Ball ball;
 Brick[][] bricks = new Brick[ROWS][COLS];
+Physics physics;
 
 int score = 0;
 int lives = 3;
@@ -60,6 +61,7 @@ void setup() {
   paddle = new Paddle((width - PADDLE_W) / 2, PADDLE_Y, PADDLE_W, PADDLE_H, paddleImg);
   ball = new Ball(0, 0, BALL_RADIUS, ballImg);
   effects = new Effects();
+  physics = new Physics();
 
   states = new GameState[5];
   states[STATE_START]     = new StartState();
@@ -80,13 +82,21 @@ void updatePlaying() {
   paddle.update(paddleTargetX());
   ball.update();
 
-  // Paddle collision (only when ball moving downward)
-  if (ball.hitsPaddle(paddle)) {
-    ball.deflectOffPaddle(paddle);
+  // Physics detects + reflects; the game layer applies the consequences.
+  if (physics.resolvePaddle(ball, paddle)) {
     paddle.squash();
   }
 
-  checkBrickCollisions();
+  Brick hit = physics.resolveBricks(ball, bricks);
+  if (hit != null) {
+    hit.destroy();
+    score += hit.points;
+    effects.burst(hit.x + hit.w / 2, hit.y + hit.h / 2, hit.burstColor);
+    if (allBricksDestroyed()) {
+      state = STATE_WINNING;
+      winTimer = WIN_DELAY;
+    }
+  }
 
   if (ball.isBelowScreen()) {
     lives--;
@@ -105,27 +115,6 @@ float paddleTargetX() {
     return paddle.x + (keyCode == LEFT ? -paddle.speed : paddle.speed);
   }
   return mouseX - paddle.w / 2;
-}
-
-void checkBrickCollisions() {
-  for (int row = 0; row < ROWS; row++) {
-    for (int col = 0; col < COLS; col++) {
-      Brick b = bricks[row][col];
-      if (b.collides(ball.x, ball.y, ball.r)) {
-        b.destroy();
-        score += b.points;
-        effects.burst(b.x + b.w / 2, b.y + b.h / 2, rowColors[row]);
-
-        ball.bounceOffBrick(b);
-
-        if (allBricksDestroyed()) {
-          state = STATE_WINNING;
-          winTimer = WIN_DELAY;
-        }
-        return; // handle one brick hit per frame
-      }
-    }
-  }
 }
 
 boolean allBricksDestroyed() {
@@ -186,7 +175,7 @@ void resetGame() {
     for (int col = 0; col < COLS; col++) {
       float bx = offsetLeft + col * (BRICK_W + BRICK_GAP);
       float by = BRICK_TOP + row * (BRICK_H + BRICK_GAP);
-      bricks[row][col] = new Brick(bx, by, BRICK_W, BRICK_H, brickImgs[row], rowPoints[row]);
+      bricks[row][col] = new Brick(bx, by, BRICK_W, BRICK_H, brickImgs[row], rowPoints[row], rowColors[row]);
     }
   }
 
