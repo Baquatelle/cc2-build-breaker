@@ -22,6 +22,7 @@ Ball ball;
 Brick[][] bricks = new Brick[ROWS][COLS];
 
 int score = 0;
+int lives = 3;
 
 void setup() {
   size(800, 600);
@@ -36,10 +37,9 @@ void setup() {
   brickImgs[4] = loadImage("brick_blue.png");
 
   paddle = new Paddle((width - PADDLE_W) / 2, PADDLE_Y, PADDLE_W, PADDLE_H, paddleImg);
-  ball = new Ball(width / 2, PADDLE_Y - BALL_RADIUS - 1, BALL_RADIUS, ballImg);
-  ball.launch();
+  ball = new Ball(0, 0, BALL_RADIUS, ballImg);
 
-  buildBricks();
+  resetGame();
 }
 
 void draw() {
@@ -60,6 +60,15 @@ void draw() {
   }
 
   checkBrickCollisions();
+
+  if (ball.isBelowScreen()) {
+    lives--;
+    if (lives <= 0) {
+      resetGame();
+    } else {
+      resetBallAndPaddle();
+    }
+  }
 
   drawBricks();
   paddle.display();
@@ -97,7 +106,10 @@ void drawBricks() {
   }
 }
 
-void buildBricks() {
+void resetGame() {
+  score = 0;
+  lives = 3;
+
   float totalWidth = COLS * (BRICK_W + BRICK_GAP) - BRICK_GAP;
   float offsetLeft = (width - totalWidth) / 2;
 
@@ -108,4 +120,13 @@ void buildBricks() {
       bricks[row][col] = new Brick(bx, by, BRICK_W, BRICK_H, brickImgs[row], rowPoints[row]);
     }
   }
+
+  resetBallAndPaddle();
+}
+
+void resetBallAndPaddle() {
+  paddle.x = (width - paddle.w) / 2;
+  ball.x = width / 2;
+  ball.y = PADDLE_Y - BALL_RADIUS - 1;
+  ball.launch();
 }
