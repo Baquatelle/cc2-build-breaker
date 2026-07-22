@@ -1,6 +1,12 @@
 // Brick Breaker
 // A simple Breakout-style game. See REQUIREMENTS.md for scope.
 
+final int STATE_START = 0;
+final int STATE_PLAYING = 1;
+final int STATE_GAME_OVER = 2;
+final int STATE_WIN = 3;
+int state = STATE_START;
+
 final int COLS = 8;
 final int ROWS = 5;
 final float BRICK_W = 90;
@@ -44,6 +50,26 @@ void setup() {
 
 void draw() {
   background(20);
+
+  if (state == STATE_START) {
+    drawBricks();
+    paddle.display();
+    ball.display();
+    drawCenteredScreen("BRICK BREAKER", "Click to start   -   Mouse or Arrow Keys to move");
+  } else if (state == STATE_PLAYING) {
+    updatePlaying();
+    drawBricks();
+    paddle.display();
+    ball.display();
+  } else if (state == STATE_GAME_OVER) {
+    drawBricks();
+    drawCenteredScreen("GAME OVER", "Score: " + score + "   -   Click to restart");
+  } else if (state == STATE_WIN) {
+    drawCenteredScreen("YOU WIN!", "Score: " + score + "   -   Click to restart");
+  }
+}
+
+void updatePlaying() {
   paddle.update();
   ball.update();
 
@@ -64,15 +90,11 @@ void draw() {
   if (ball.isBelowScreen()) {
     lives--;
     if (lives <= 0) {
-      resetGame();
+      state = STATE_GAME_OVER;
     } else {
       resetBallAndPaddle();
     }
   }
-
-  drawBricks();
-  paddle.display();
-  ball.display();
 }
 
 void checkBrickCollisions() {
@@ -92,10 +114,23 @@ void checkBrickCollisions() {
         } else {
           ball.vy = -ball.vy;
         }
+
+        if (allBricksDestroyed()) {
+          state = STATE_WIN;
+        }
         return; // handle one brick hit per frame
       }
     }
   }
+}
+
+boolean allBricksDestroyed() {
+  for (int row = 0; row < ROWS; row++) {
+    for (int col = 0; col < COLS; col++) {
+      if (bricks[row][col].alive) return false;
+    }
+  }
+  return true;
 }
 
 void drawBricks() {
@@ -104,6 +139,17 @@ void drawBricks() {
       bricks[row][col].display();
     }
   }
+}
+
+void drawCenteredScreen(String title, String subtitle) {
+  fill(0, 160);
+  rect(0, 0, width, height);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(48);
+  text(title, width / 2, height / 2 - 20);
+  textSize(20);
+  text(subtitle, width / 2, height / 2 + 30);
 }
 
 void resetGame() {
@@ -129,4 +175,13 @@ void resetBallAndPaddle() {
   ball.x = width / 2;
   ball.y = PADDLE_Y - BALL_RADIUS - 1;
   ball.launch();
+}
+
+void mousePressed() {
+  if (state == STATE_START) {
+    state = STATE_PLAYING;
+  } else if (state == STATE_GAME_OVER || state == STATE_WIN) {
+    resetGame();
+    state = STATE_PLAYING;
+  }
 }
