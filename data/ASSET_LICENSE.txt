@@ -1,0 +1,17 @@
+Sprites in this folder (ball.png, paddle.png, brick_*.png) are taken from:
+
+  "Breakout (Brick Breaker) Tile Set - Free"
+  by ImagineLabs (http://www.imaginelabs.rocks)
+  Source: https://opengameart.org/content/breakout-brick-breaker-tile-set-free
+
+License: Creative Commons Zero (CC0) - http://creativecommons.org/publicdomain/zero/1.0/
+You may use these assets in personal and commercial projects, no attribution required.
+
+Original filenames -> renamed as:
+  58-Breakout-Tiles.png -> ball.png
+  55-Breakout-Tiles.png -> paddle.png
+  07-Breakout-Tiles.png -> brick_red.png
+  09-Breakout-Tiles.png -> brick_orange.png
+  13-Breakout-Tiles.png -> brick_yellow.png
+  03-Breakout-Tiles.png -> brick_green.png
+  01-Breakout-Tiles.png -> brick_blue.png
