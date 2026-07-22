@@ -30,6 +30,19 @@ Brick[][] bricks = new Brick[ROWS][COLS];
 int score = 0;
 int lives = 3;
 
+// Juice: brick-destruction particle burst + screen shake.
+ArrayList<Particle> particles = new ArrayList<Particle>();
+color[] rowColors = {
+  color(220, 60, 50),    // red
+  color(230, 130, 40),   // orange
+  color(235, 205, 55),   // yellow
+  color(70, 190, 80),    // green
+  color(60, 130, 220)    // blue
+};
+float shakeTimer = 0;
+final float SHAKE_DURATION = 12;
+final float SHAKE_MAG = 6;
+
 void setup() {
   size(800, 600);
   imageMode(CORNER);
@@ -58,9 +71,19 @@ void draw() {
     drawCenteredScreen("BRICK BREAKER", "Click to start   -   Mouse or Arrow Keys to move");
   } else if (state == STATE_PLAYING) {
     updatePlaying();
+
+    pushMatrix();
+    if (shakeTimer > 0) {
+      float mag = SHAKE_MAG * (shakeTimer / SHAKE_DURATION);
+      translate(random(-mag, mag), random(-mag, mag));
+      shakeTimer--;
+    }
     drawBricks();
     paddle.display();
     ball.display();
+    updateAndDrawParticles();
+    popMatrix();
+
     drawHUD();
   } else if (state == STATE_GAME_OVER) {
     drawBricks();
@@ -106,6 +129,8 @@ void checkBrickCollisions() {
       if (b.collides(ball.x, ball.y, ball.r)) {
         b.alive = false;
         score += b.points;
+        spawnBurst(b.x + b.w / 2, b.y + b.h / 2, rowColors[row]);
+        shakeTimer = SHAKE_DURATION;
 
         boolean wasAboveOrBelow = (ball.prevY + ball.r <= b.y) || (ball.prevY - ball.r >= b.y + b.h);
         boolean wasLeftOrRight = (ball.prevX + ball.r <= b.x) || (ball.prevX - ball.r >= b.x + b.w);
@@ -123,6 +148,22 @@ void checkBrickCollisions() {
         return; // handle one brick hit per frame
       }
     }
+  }
+}
+
+void spawnBurst(float cx, float cy, color c) {
+  int count = (int) random(10, 16);
+  for (int i = 0; i < count; i++) {
+    particles.add(new Particle(cx, cy, c));
+  }
+}
+
+void updateAndDrawParticles() {
+  for (int i = particles.size() - 1; i >= 0; i--) {
+    Particle p = particles.get(i);
+    p.update();
+    p.display();
+    if (p.isDead()) particles.remove(i);
   }
 }
 
@@ -166,6 +207,8 @@ void drawCenteredScreen(String title, String subtitle) {
 void resetGame() {
   score = 0;
   lives = 3;
+  particles.clear();
+  shakeTimer = 0;
 
   float totalWidth = COLS * (BRICK_W + BRICK_GAP) - BRICK_GAP;
   float offsetLeft = (width - totalWidth) / 2;
