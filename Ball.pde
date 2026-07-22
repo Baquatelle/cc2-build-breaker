@@ -1,0 +1,46 @@
+class Ball {
+  float x, y;
+  float vx, vy;
+  float r;
+  PImage sprite;
+
+  Ball(float startX, float startY, float radius, PImage img) {
+    x = startX;
+    y = startY;
+    r = radius;
+    sprite = img;
+  }
+
+  void launch() {
+    float dir = random(1) < 0.5 ? -1 : 1;
+    vx = 3 * dir;
+    vy = -4;
+  }
+
+  void update() {
+    x += vx;
+    y += vy;
+
+    if (x - r < 0) {
+      x = r;
+      vx = -vx;
+    } else if (x + r > width) {
+      x = width - r;
+      vx = -vx;
+    }
+    if (y - r < 0) {
+      y = r;
+      vy = -vy;
+    }
+  }
+
+  boolean isBelowScreen() {
+    return y - r > height;
+  }
+
+  void display() {
+    imageMode(CENTER);
+    image(sprite, x, y, r * 2, r * 2);
+    imageMode(CORNER);
+  }
+}
