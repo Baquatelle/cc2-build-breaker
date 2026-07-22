@@ -34,8 +34,8 @@ Brick[][] bricks = new Brick[ROWS][COLS];
 int score = 0;
 int lives = 3;
 
-// Juice: brick-destruction particle burst + screen shake.
-ArrayList<Particle> particles = new ArrayList<Particle>();
+// Juice: brick-destruction particle burst + screen shake, owned by Effects.
+Effects effects;
 color[] rowColors = {
   color(220, 60, 50),    // red
   color(230, 130, 40),   // orange
@@ -43,9 +43,6 @@ color[] rowColors = {
   color(70, 190, 80),    // green
   color(60, 130, 220)    // blue
 };
-float shakeTimer = 0;
-final float SHAKE_DURATION = 12;
-final float SHAKE_MAG = 6;
 
 void setup() {
   size(800, 600);
@@ -61,6 +58,7 @@ void setup() {
 
   paddle = new Paddle((width - PADDLE_W) / 2, PADDLE_Y, PADDLE_W, PADDLE_H, paddleImg);
   ball = new Ball(0, 0, BALL_RADIUS, ballImg);
+  effects = new Effects();
 
   resetGame();
 }
@@ -77,16 +75,12 @@ void draw() {
     updatePlaying();
 
     pushMatrix();
-    if (shakeTimer > 0) {
-      float mag = SHAKE_MAG * (shakeTimer / SHAKE_DURATION);
-      translate(random(-mag, mag), random(-mag, mag));
-      shakeTimer--;
-    }
+    effects.applyShake();
     drawBricks();
     updateBricks();
     paddle.display();
     ball.display();
-    updateAndDrawParticles();
+    effects.updateAndDraw();
     popMatrix();
 
     drawHUD();
@@ -96,7 +90,7 @@ void draw() {
     updateBricks();
     paddle.display();
     ball.display();
-    updateAndDrawParticles();
+    effects.updateAndDraw();
     drawHUD();
 
     winTimer--;
@@ -154,8 +148,7 @@ void checkBrickCollisions() {
       if (b.collides(ball.x, ball.y, ball.r)) {
         b.destroy();
         score += b.points;
-        spawnBurst(b.x + b.w / 2, b.y + b.h / 2, rowColors[row]);
-        shakeTimer = SHAKE_DURATION;
+        effects.burst(b.x + b.w / 2, b.y + b.h / 2, rowColors[row]);
 
         boolean wasAboveOrBelow = (ball.prevY + ball.r <= b.y) || (ball.prevY - ball.r >= b.y + b.h);
         boolean wasLeftOrRight = (ball.prevX + ball.r <= b.x) || (ball.prevX - ball.r >= b.x + b.w);
@@ -174,22 +167,6 @@ void checkBrickCollisions() {
         return; // handle one brick hit per frame
       }
     }
-  }
-}
-
-void spawnBurst(float cx, float cy, color c) {
-  int count = (int) random(10, 16);
-  for (int i = 0; i < count; i++) {
-    particles.add(new Particle(cx, cy, c));
-  }
-}
-
-void updateAndDrawParticles() {
-  for (int i = particles.size() - 1; i >= 0; i--) {
-    Particle p = particles.get(i);
-    p.update();
-    p.display();
-    if (p.isDead()) particles.remove(i);
   }
 }
 
@@ -241,8 +218,7 @@ void drawCenteredScreen(String title, String subtitle) {
 void resetGame() {
   score = 0;
   lives = 3;
-  particles.clear();
-  shakeTimer = 0;
+  effects.clear();
   winTimer = 0;
 
   float totalWidth = COLS * (BRICK_W + BRICK_GAP) - BRICK_GAP;
