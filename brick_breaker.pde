@@ -13,11 +13,19 @@ final float PADDLE_W = 100;
 final float PADDLE_H = 24;
 final float PADDLE_Y = 560;
 
+PImage paddleImg;
+Paddle paddle;
+
 void setup() {
   size(800, 600);
   imageMode(CORNER);
+
+  paddleImg = loadImage("paddle.png");
+  paddle = new Paddle((width - PADDLE_W) / 2, PADDLE_Y, PADDLE_W, PADDLE_H, paddleImg);
 }
 
 void draw() {
   background(20);
+  paddle.update();
+  paddle.display();
 }
