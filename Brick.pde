@@ -7,7 +7,7 @@ class Brick {
   // Death fade-out: plays after the brick is destroyed, under the burst.
   boolean dying = false;
   float deathTimer = 0;
-  final float DEATH_FRAMES = 10;
+  final float DEATH_FRAMES = 6;
 
   Brick(float bx, float by, float bw, float bh, PImage img, int pointValue) {
     x = bx;
@@ -39,11 +39,11 @@ class Brick {
       image(sprite, x, y, w, h);
     } else if (dying) {
       float t = deathTimer / DEATH_FRAMES;   // 1.0 -> 0.0
-      float s = 0.6 + 0.4 * t;                // shrink slightly toward 0.6
+      float s = 0.3 + 0.7 * t;                // collapse crisply toward 0.3
       pushMatrix();
       translate(x + w / 2, y + h / 2);
       scale(s);
-      tint(255, 255 * t);                    // fade alpha out
+      tint(255, 255 * t * t);                // eased fade -> snappy pop-out
       imageMode(CENTER);
       image(sprite, 0, 0, w, h);
       imageMode(CORNER);
