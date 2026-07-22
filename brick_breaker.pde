@@ -7,6 +7,7 @@ final int STATE_GAME_OVER = 2;
 final int STATE_WINNING = 3;   // brief transition: let the last fade + burst finish
 final int STATE_WIN = 4;
 int state = STATE_START;
+GameState[] states;
 
 float winTimer = 0;
 final float WIN_DELAY = 45;     // ~0.75s at 60fps
@@ -60,47 +61,19 @@ void setup() {
   ball = new Ball(0, 0, BALL_RADIUS, ballImg);
   effects = new Effects();
 
+  states = new GameState[5];
+  states[STATE_START]     = new StartState();
+  states[STATE_PLAYING]   = new PlayingState();
+  states[STATE_WINNING]   = new WinningState();
+  states[STATE_GAME_OVER] = new GameOverState();
+  states[STATE_WIN]       = new WinState();
+
   resetGame();
 }
 
 void draw() {
   background(20);
-
-  if (state == STATE_START) {
-    drawBricks();
-    paddle.display();
-    ball.display();
-    drawCenteredScreen("BRICK BREAKER", "Click to start   -   Mouse or Arrow Keys to move");
-  } else if (state == STATE_PLAYING) {
-    updatePlaying();
-
-    pushMatrix();
-    effects.applyShake();
-    drawBricks();
-    updateBricks();
-    paddle.display();
-    ball.display();
-    effects.updateAndDraw();
-    popMatrix();
-
-    drawHUD();
-  } else if (state == STATE_WINNING) {
-    // Freeze the ball but keep the last brick's fade and the burst playing out.
-    drawBricks();
-    updateBricks();
-    paddle.display();
-    ball.display();
-    effects.updateAndDraw();
-    drawHUD();
-
-    winTimer--;
-    if (winTimer <= 0) state = STATE_WIN;
-  } else if (state == STATE_GAME_OVER) {
-    drawBricks();
-    drawCenteredScreen("GAME OVER", "Score: " + score + "   -   Click to restart");
-  } else if (state == STATE_WIN) {
-    drawCenteredScreen("YOU WIN!", "Score: " + score + "   -   Click to restart");
-  }
+  states[state].draw();
 }
 
 void updatePlaying() {
@@ -243,10 +216,5 @@ void resetBallAndPaddle() {
 }
 
 void mousePressed() {
-  if (state == STATE_START) {
-    state = STATE_PLAYING;
-  } else if (state == STATE_GAME_OVER || state == STATE_WIN) {
-    resetGame();
-    state = STATE_PLAYING;
-  }
+  states[state].onClick();
 }
