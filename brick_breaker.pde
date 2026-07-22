@@ -61,6 +61,7 @@ void draw() {
     drawBricks();
     paddle.display();
     ball.display();
+    drawHUD();
   } else if (state == STATE_GAME_OVER) {
     drawBricks();
     drawCenteredScreen("GAME OVER", "Score: " + score + "   -   Click to restart");
@@ -139,6 +140,15 @@ void drawBricks() {
       bricks[row][col].display();
     }
   }
+}
+
+void drawHUD() {
+  fill(255);
+  textSize(18);
+  textAlign(LEFT, TOP);
+  text("Score: " + score, 12, 10);
+  textAlign(RIGHT, TOP);
+  text("Lives: " + lives, width - 12, 10);
 }
 
 void drawCenteredScreen(String title, String subtitle) {
