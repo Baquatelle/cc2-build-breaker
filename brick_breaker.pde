@@ -127,7 +127,7 @@ void checkBrickCollisions() {
     for (int col = 0; col < COLS; col++) {
       Brick b = bricks[row][col];
       if (b.collides(ball.x, ball.y, ball.r)) {
-        b.alive = false;
+        b.destroy();
         score += b.points;
         spawnBurst(b.x + b.w / 2, b.y + b.h / 2, rowColors[row]);
         shakeTimer = SHAKE_DURATION;
