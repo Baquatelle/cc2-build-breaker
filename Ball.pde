@@ -1,5 +1,6 @@
 class Ball {
   float x, y;
+  float prevX, prevY;
   float vx, vy;
   float r;
   PImage sprite;
@@ -18,6 +19,9 @@ class Ball {
   }
 
   void update() {
+    prevX = x;
+    prevY = y;
+
     x += vx;
     y += vy;
 

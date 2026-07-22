@@ -21,6 +21,8 @@ Paddle paddle;
 Ball ball;
 Brick[][] bricks = new Brick[ROWS][COLS];
 
+int score = 0;
+
 void setup() {
   size(800, 600);
   imageMode(CORNER);
@@ -57,9 +59,34 @@ void draw() {
     ball.vy = -sqrt(max(speed * speed - ball.vx * ball.vx, speed * speed * 0.3));
   }
 
+  checkBrickCollisions();
+
   drawBricks();
   paddle.display();
   ball.display();
+}
+
+void checkBrickCollisions() {
+  for (int row = 0; row < ROWS; row++) {
+    for (int col = 0; col < COLS; col++) {
+      Brick b = bricks[row][col];
+      if (b.collides(ball.x, ball.y, ball.r)) {
+        b.alive = false;
+        score += b.points;
+
+        boolean wasAboveOrBelow = (ball.prevY + ball.r <= b.y) || (ball.prevY - ball.r >= b.y + b.h);
+        boolean wasLeftOrRight = (ball.prevX + ball.r <= b.x) || (ball.prevX - ball.r >= b.x + b.w);
+        if (wasAboveOrBelow) {
+          ball.vy = -ball.vy;
+        } else if (wasLeftOrRight) {
+          ball.vx = -ball.vx;
+        } else {
+          ball.vy = -ball.vy;
+        }
+        return; // handle one brick hit per frame
+      }
+    }
+  }
 }
 
 void drawBricks() {
