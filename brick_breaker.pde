@@ -14,8 +14,12 @@ final float PADDLE_H = 24;
 final float PADDLE_Y = 560;
 
 PImage ballImg, paddleImg;
+PImage[] brickImgs = new PImage[ROWS];
+int[] rowPoints = { 50, 40, 30, 20, 10 };
+
 Paddle paddle;
 Ball ball;
+Brick[][] bricks = new Brick[ROWS][COLS];
 
 void setup() {
   size(800, 600);
@@ -23,10 +27,17 @@ void setup() {
 
   ballImg = loadImage("ball.png");
   paddleImg = loadImage("paddle.png");
+  brickImgs[0] = loadImage("brick_red.png");
+  brickImgs[1] = loadImage("brick_orange.png");
+  brickImgs[2] = loadImage("brick_yellow.png");
+  brickImgs[3] = loadImage("brick_green.png");
+  brickImgs[4] = loadImage("brick_blue.png");
 
   paddle = new Paddle((width - PADDLE_W) / 2, PADDLE_Y, PADDLE_W, PADDLE_H, paddleImg);
   ball = new Ball(width / 2, PADDLE_Y - BALL_RADIUS - 1, BALL_RADIUS, ballImg);
   ball.launch();
+
+  buildBricks();
 }
 
 void draw() {
@@ -46,6 +57,28 @@ void draw() {
     ball.vy = -sqrt(max(speed * speed - ball.vx * ball.vx, speed * speed * 0.3));
   }
 
+  drawBricks();
   paddle.display();
   ball.display();
+}
+
+void drawBricks() {
+  for (int row = 0; row < ROWS; row++) {
+    for (int col = 0; col < COLS; col++) {
+      bricks[row][col].display();
+    }
+  }
+}
+
+void buildBricks() {
+  float totalWidth = COLS * (BRICK_W + BRICK_GAP) - BRICK_GAP;
+  float offsetLeft = (width - totalWidth) / 2;
+
+  for (int row = 0; row < ROWS; row++) {
+    for (int col = 0; col < COLS; col++) {
+      float bx = offsetLeft + col * (BRICK_W + BRICK_GAP);
+      float by = BRICK_TOP + row * (BRICK_H + BRICK_GAP);
+      bricks[row][col] = new Brick(bx, by, BRICK_W, BRICK_H, brickImgs[row], rowPoints[row]);
+    }
+  }
 }
