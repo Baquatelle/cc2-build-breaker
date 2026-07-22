@@ -25,6 +25,15 @@ class Brick {
     deathTimer = DEATH_FRAMES;
   }
 
+  // Advance the death fade-out animation. Kept separate from display() so
+  // rendering stays side-effect free (one update per frame, regardless of draws).
+  void update() {
+    if (dying) {
+      deathTimer--;
+      if (deathTimer <= 0) dying = false;
+    }
+  }
+
   boolean collides(float ballX, float ballY, float ballR) {
     if (!alive) return false;
     float closestX = constrain(ballX, x, x + w);
@@ -49,9 +58,6 @@ class Brick {
       imageMode(CORNER);
       noTint();
       popMatrix();
-
-      deathTimer--;
-      if (deathTimer <= 0) dying = false;
     }
   }
 }

@@ -83,6 +83,7 @@ void draw() {
       shakeTimer--;
     }
     drawBricks();
+    updateBricks();
     paddle.display();
     ball.display();
     updateAndDrawParticles();
@@ -92,6 +93,7 @@ void draw() {
   } else if (state == STATE_WINNING) {
     // Freeze the ball but keep the last brick's fade and the burst playing out.
     drawBricks();
+    updateBricks();
     paddle.display();
     ball.display();
     updateAndDrawParticles();
@@ -189,6 +191,14 @@ boolean allBricksDestroyed() {
     }
   }
   return true;
+}
+
+void updateBricks() {
+  for (int row = 0; row < ROWS; row++) {
+    for (int col = 0; col < COLS; col++) {
+      bricks[row][col].update();
+    }
+  }
 }
 
 void drawBricks() {
