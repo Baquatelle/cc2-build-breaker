@@ -81,15 +81,8 @@ void updatePlaying() {
   ball.update();
 
   // Paddle collision (only when ball moving downward)
-  if (ball.vy > 0
-      && ball.x + ball.r > paddle.x && ball.x - ball.r < paddle.x + paddle.w
-      && ball.y + ball.r > paddle.y && ball.y - ball.r < paddle.y + paddle.h) {
-    ball.y = paddle.y - ball.r;
-    float relativeIntersect = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
-    relativeIntersect = constrain(relativeIntersect, -1, 1);
-    float speed = sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
-    ball.vx = relativeIntersect * speed;
-    ball.vy = -sqrt(max(speed * speed - ball.vx * ball.vx, speed * speed * 0.3));
+  if (ball.hitsPaddle(paddle)) {
+    ball.deflectOffPaddle(paddle);
     paddle.squash();
   }
 
@@ -123,15 +116,7 @@ void checkBrickCollisions() {
         score += b.points;
         effects.burst(b.x + b.w / 2, b.y + b.h / 2, rowColors[row]);
 
-        boolean wasAboveOrBelow = (ball.prevY + ball.r <= b.y) || (ball.prevY - ball.r >= b.y + b.h);
-        boolean wasLeftOrRight = (ball.prevX + ball.r <= b.x) || (ball.prevX - ball.r >= b.x + b.w);
-        if (wasAboveOrBelow) {
-          ball.vy = -ball.vy;
-        } else if (wasLeftOrRight) {
-          ball.vx = -ball.vx;
-        } else {
-          ball.vy = -ball.vy;
-        }
+        ball.bounceOffBrick(b);
 
         if (allBricksDestroyed()) {
           state = STATE_WINNING;
