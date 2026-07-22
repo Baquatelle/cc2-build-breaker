@@ -3,6 +3,7 @@ class Ball {
   float prevX, prevY;
   float vx, vy;
   float r;
+  float angle = 0;
   PImage sprite;
 
   Ball(float startX, float startY, float radius, PImage img) {
@@ -36,6 +37,8 @@ class Ball {
       y = r;
       vy = -vy;
     }
+
+    angle += vx * 0.05;
   }
 
   boolean isBelowScreen() {
@@ -43,8 +46,12 @@ class Ball {
   }
 
   void display() {
+    pushMatrix();
+    translate(x, y);
+    rotate(angle);
     imageMode(CENTER);
-    image(sprite, x, y, r * 2, r * 2);
+    image(sprite, 0, 0, r * 2, r * 2);
     imageMode(CORNER);
+    popMatrix();
   }
 }
