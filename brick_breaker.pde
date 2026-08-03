@@ -183,7 +183,7 @@ void updatePlaying() {
   // Check win condition (all bricks destroyed)
   if (allBricksDestroyed()) {
     if (level >= MAX_LEVEL) {
-      // Check high score
+      // Check high score before showing win screen
       if (isHighScore(score)) {
         tempScore = score;
         newHighScoreName = "";
@@ -306,6 +306,8 @@ void resetBalls() {
   balls.add(main);
 }
 
+// Translate raw input (arrow keys, else mouse) into the paddle's desired
+// left-edge X. Keeps input handling in the main tab, out of the Paddle class.
 float paddleTargetX() {
   if (keyPressed && (keyCode == LEFT || keyCode == RIGHT)) {
     return paddle.x + (keyCode == LEFT ? -paddle.speed : paddle.speed);

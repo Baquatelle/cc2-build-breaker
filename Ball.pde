@@ -5,24 +5,17 @@ class Ball {
   float r;
   float angle = 0;
   PImage sprite;
-  boolean isMain = false;
 
   // Trail
   ArrayList<PVector> trailPos;
   ArrayList<Float> trailAngles;
   int TRAIL_LENGTH = 20;
 
-
   Ball(float startX, float startY, float radius, PImage img) {
-    this(startX, startY, radius, img, true);
-  }
-
-  Ball(float startX, float startY, float radius, PImage img, boolean main) {
     x = startX;
     y = startY;
     r = radius;
     sprite = img;
-    isMain = main;
     trailPos = new ArrayList<PVector>();
     trailAngles = new ArrayList<Float>();
   }
@@ -42,19 +35,17 @@ class Ball {
     x += vx;
     y += vy;
 
+    // Wall bounces, sound handled by game layer via Physics return
     if (x - r < 0) {
       x = r;
       vx = -vx;
-      sound.wallBounce();
     } else if (x + r > width) {
       x = width - r;
       vx = -vx;
-      sound.wallBounce();
     }
     if (y - r < 0) {
       y = r;
       vy = -vy;
-      sound.wallBounce();
     }
 
     angle += vx * 0.05;
@@ -71,8 +62,6 @@ class Ball {
   boolean isBelowScreen() {
     return y - r > height;
   }
-
-  // --- Bounce behavior (owns paddle/brick reflection per REQUIREMENTS) ---
 
   void bounceX() {
     vx = -vx;
