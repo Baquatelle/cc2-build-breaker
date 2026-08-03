@@ -11,7 +11,8 @@ experience.
 - Processing 4 (Java mode), multi-tab sketch, standard `size()` / `draw()` loop.
 - Mouse (paddle follows mouse X) as primary control, with left/right arrow
   keys as an alternative.
-- **Processing Sound library** – installed via `Sketch → Import Library → Add Library → Sound`.
+- **Sound** – procedural PCM tones via the JDK's built-in `javax.sound.sampled`
+  (see `Tone.pde`). No contributed library required.
 - Built-in `PImage` for sprites; `loadStrings()`/`saveStrings()` for high score persistence.
 
 ## File Structure (each class in its own file)
@@ -29,7 +30,9 @@ experience.
 - `Effects.pde` — particle bursts + screen shake ("juice").
 - `Particle.pde` — a single short‑lived burst particle.
 - `PowerUp.pde` — `class PowerUp` (types: W, +, S, M; falling; paddle collision).
-- `SoundManager.pde` — sound effects using Processing Sound library (`SinOsc`).
+- `SoundManager.pde` — maps game events to pre-rendered tone clips.
+- `Tone.pde` — zero-dependency PCM tone synthesizer and playback thread, built
+  on `javax.sound.sampled`.
 - `HighScore.pde` — high score management: top‑5, file I/O, display.
 - `data/` — image assets (see below).
 
@@ -111,8 +114,10 @@ All balls break bricks; life is lost only when all balls are gone.
 
 ### Sound Effects
 - Paddle hit, brick hit, wall bounce, power‑up, level up, life lost, game over, win.
-- Generated procedurally using `SinOsc` (Processing Sound library).
-- Tone queue prevents overlapping sounds from cancelling each other.
+- Generated procedurally as PCM sine waves via the JDK's `javax.sound.sampled`
+  (no external library) — see `Tone.pde`.
+- A single-slot queue serializes playback so overlapping triggers don't cut
+  each other off.
 
 ## Required Topics (this design covers all 3)
 | Topic | Implementation |
@@ -148,3 +153,4 @@ playable start to finish (start → play → win/lose → restart → high score
 |---------|---------|
 | 1.0 (original) | Core Breakout mechanics, 5×8 bricks, start/play/game over/win screens. |
 | 2.0 (extended) | Ball trail, 4 power‑ups (W, +, S, M), multi‑ball, 4 levels, sound effects, high score table. |
+| 2.1 | Replaced the Processing Sound library dependency with a zero-dependency `javax.sound.sampled` tone synthesizer (`Tone.pde`); no contributed library required. |

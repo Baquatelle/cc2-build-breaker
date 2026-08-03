@@ -2,7 +2,7 @@
 
 A fully-featured Breakout-style arcade game built in [Processing](https://processing.org/) (Java mode). Guide the ball with your paddle, smash bricks, collect power‑ups, conquer multiple levels, and compete for the high score.
 
-![Processing](https://img.shields.io/badge/Processing-4-006699) ![License](https://img.shields.io/badge/assets-CC0-brightgreen) ![Sound](https://img.shields.io/badge/Sound-Processing_Sound-FF69B4)
+![Processing](https://img.shields.io/badge/Processing-4-006699) ![License](https://img.shields.io/badge/assets-CC0-brightgreen) ![Sound](https://img.shields.io/badge/Sound-javax.sound.sampled-FF69B4)
 
 ---
 
@@ -57,7 +57,6 @@ The game runs as a Processing sketch, playable start to finish: start, play, adv
 ## Requirements
 
 - **[Processing 4](https://processing.org/download)** (Java mode). Processing 3 may work but is untested.
-- **Processing Sound library** – install via `Sketch → Import Library → Add Library → Sound`.
 
 No other dependencies.
 
@@ -66,11 +65,10 @@ No other dependencies.
 ## Getting Started
 
 1. **Install Processing** from [processing.org/download](https://processing.org/download).
-2. **Install the Sound library** – open Processing, go to `Sketch → Import Library → Add Library…`, search for `Sound`, and install it.
-3. **Clone or download** this repository.
-4. **Open the sketch** – open `brick_breaker.pde` in the Processing IDE. All `.pde` files and the `data/` folder must be inside a folder named `brick_breaker/`.
-5. **Run it** – press the Run button (▶) or `Ctrl/Cmd + R`. An 800×600 window opens on the start screen.
-6. **Click** to start and play.
+2. **Clone or download** this repository.
+3. **Open the sketch** – open `brick_breaker.pde` in the Processing IDE. All `.pde` files and the `data/` folder must be inside a folder named `brick_breaker/`.
+4. **Run it** – press the Run button (▶) or `Ctrl/Cmd + R`. An 800×600 window opens on the start screen.
+5. **Click** to start and play.
 
 ---
 
@@ -163,7 +161,8 @@ brick_breaker/
 ├── Effects.pde # Particle bursts + screen shake ("juice")
 ├── Particle.pde # A single short‑lived burst particle
 ├── PowerUp.pde # Power‑up: types (W, +, S, M), falling, paddle collision, display
-├── SoundManager.pde # Sound effects using Processing Sound library
+├── SoundManager.pde # Maps game events to pre-rendered tone clips
+├── Tone.pde # PCM tone synth + playback thread (javax.sound.sampled)
 ├── HighScore.pde # High score management: top‑5, file I/O, display
 ├── REQUIREMENTS.md # Original scope & requirements
 ├── README.md # This file
@@ -189,7 +188,7 @@ The code separates concerns into distinct layers:
 - **`Physics.pde` (physics layer)**: Detects overlaps and applies physical responses (reflections). Owns no game rules – scoring, effects, and win/life logic stay in the game layer.
 - **`Ball` / `Paddle` / `Brick` / `PowerUp`**: Each encapsulates its own state, behaviour, and drawing. The main tab translates input into a desired X for the paddle, keeping it decoupled from input sources.
 - **`Effects` / `Particle`**: Own all visual "juice" (bursts and shake).
-- **`SoundManager`**: Wraps the Processing Sound library; plays tones for game events.
+- **`SoundManager` / `Tone`**: `SoundManager` pre-renders one PCM clip per game event; `Tone` owns a daemon playback thread built on `javax.sound.sampled`, so triggering a sound from `draw()` is just a non-blocking queue push.
 - **`HighScore`**: Manages top‑5 scores via `Comparable`, file I/O, and display.
 
 **Required Processing topics covered:**
@@ -236,7 +235,7 @@ Other knobs live with their classes:
 **Sprites**: "Breakout (Brick Breaker) Tile Set - Free" by ImagineLabs ([imaginelabs.rocks](http://www.imaginelabs.rocks)), via [OpenGameArt.org](https://opengameart.org/content/breakout-brick-breaker-tile-set-free).  
 Licensed [CC0](http://creativecommons.org/publicdomain/zero/1.0/) (public domain) – free for personal and commercial use, no attribution required. See [`data/ASSET_LICENSE.txt`](data/ASSET_LICENSE.txt) for full details.
 
-**Sound**: Generated procedurally using the Processing Sound library – no external audio files.
+**Sound**: Generated procedurally as PCM sine waves using the JDK's built-in `javax.sound.sampled` – no external audio files and no contributed library.
 
 ---
 
@@ -244,12 +243,11 @@ Licensed [CC0](http://creativecommons.org/publicdomain/zero/1.0/) (public domain
 
 | Issue | Solution |
 |-------|----------|
-| "No library found for processing.sound" | Install the Sound library via `Sketch → Import Library → Add Library → Sound`. |
 | Blank file chooser dialog (Linux) | In Preferences, uncheck "Use native file selector". |
 | Game doesn't start / black screen | Check the console for errors. Ensure all `.pde` files are in the sketch folder and the `data/` folder is present. |
 | High scores not saving | Ensure the sketch folder is writable. The file `scores.txt` will be created automatically. |
 | Multi‑balls don't break bricks | Check that `physics.resolveBricks()` is called for each ball in `updatePlaying()` – it should be. |
-| Sound is distorted or missing | Check your system audio output. The Sound library uses the default audio device. |
+| Sound is silent | Check the console for a `Tone: audio unavailable` or `Tone: audio device kept failing` message – the game runs silently if no audio device is available, rather than crashing. Otherwise check your system audio output; `javax.sound.sampled` uses the default device. |
 
 ---
 
