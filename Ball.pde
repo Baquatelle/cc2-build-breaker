@@ -115,23 +115,25 @@ class Ball {
   }
 
   void display() {
-    // Draw trail ghosts (same as before)
-    for (int i = 0; i < trailPos.size(); i++) {
-      PVector p = trailPos.get(i);
-      float a = trailAngles.get(i);
-      float alpha = map(i, 0, trailPos.size()-1, 20, 150);
-      float s = map(i, 0, trailPos.size()-1, 0.3, 0.9);
-      pushMatrix();
-      translate(p.x, p.y);
-      rotate(a);
-      scale(s);
-      tint(255, alpha);
-      image(sprite, -r, -r, r*2, r*2);
-      noTint();
-      popMatrix();
+    // Trail ghosts – guard against size 1 to avoid NaN
+    if (trailPos.size() > 1) {
+      for (int i = 0; i < trailPos.size(); i++) {
+        PVector p = trailPos.get(i);
+        float a = trailAngles.get(i);
+        float alpha = map(i, 0, trailPos.size()-1, 20, 150);
+        float s = map(i, 0, trailPos.size()-1, 0.3, 0.9);
+        pushMatrix();
+        translate(p.x, p.y);
+        rotate(a);
+        scale(s);
+        tint(255, alpha);
+        image(sprite, -r, -r, r*2, r*2);
+        noTint();
+        popMatrix();
+      }
     }
-
-    // Draw the actual ball
+  
+    // Main ball
     pushMatrix();
     translate(x, y);
     rotate(angle);
@@ -139,6 +141,5 @@ class Ball {
     image(sprite, 0, 0, r * 2, r * 2);
     imageMode(CORNER);
     popMatrix();
-
   }
 }
