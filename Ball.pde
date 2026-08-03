@@ -5,6 +5,7 @@ class Ball {
   float r;
   float angle = 0;
   PImage sprite;
+  boolean hitWall = false;   // set for one frame when update() bounces off a wall
 
   // Trail
   ArrayList<PVector> trailPos;
@@ -35,17 +36,21 @@ class Ball {
     x += vx;
     y += vy;
 
-    // Wall bounces, sound handled by game layer via Physics return
+    // Wall bounces. hitWall flags the frame so the game layer can play a sound.
+    hitWall = false;
     if (x - r < 0) {
       x = r;
       vx = -vx;
+      hitWall = true;
     } else if (x + r > width) {
       x = width - r;
       vx = -vx;
+      hitWall = true;
     }
     if (y - r < 0) {
       y = r;
       vy = -vy;
+      hitWall = true;
     }
 
     angle += vx * 0.05;

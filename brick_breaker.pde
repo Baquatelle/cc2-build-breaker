@@ -160,6 +160,7 @@ void updatePlaying() {
   for (int i = balls.size()-1; i >= 0; i--) {
     Ball b = balls.get(i);
     b.update();
+    if (b.hitWall) sound.wallBounce();
     // Remove if fallen off screen
     if (b.isBelowScreen()) {
       balls.remove(i);
