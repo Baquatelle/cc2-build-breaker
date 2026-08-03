@@ -17,6 +17,9 @@ Icon
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
 
+#Score file
+scores.txt
+
 ### Windows
 # Windows thumbnail cache files
 Thumbs.db
@@ -42,4 +45,4 @@ $RECYCLE.BIN/
 .history/
 
 # Built Visual Studio Code Extensions
-*.vsix
+*.vsixscores.txt

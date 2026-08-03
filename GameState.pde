@@ -1,5 +1,13 @@
-// Per-state handlers for the game's state machine.
-// Each state implements draw(), onClick(), and optionally keyPressed().
+// Per-state handlers for the game's state machine. Replaces the duplicated
+// if/else chains that used to live in draw() and mousePressed(): adding a new
+// state now means adding a subclass + one array slot (see setup()), touching
+// nothing else. `int state` stays the single source of truth; every existing
+// `state = STATE_X` transition is left untouched.
+//
+// These are non-static inner classes, so they can read the sketch globals
+// (score, balls, paddle, bricks, effects, ...) and call the top-level helpers
+// (drawBricks(), updatePlaying(), drawCenteredScreen(), resetGame(), ...).
+
 abstract class GameState {
   void draw() {}
   void onClick() {}
@@ -10,9 +18,9 @@ class StartState extends GameState {
   void draw() {
     drawBricks();
     paddle.display();
-    ball.display();
+    if (!balls.isEmpty()) balls.get(0).display();
     drawCenteredScreen("BRICK BREAKER", "Click to start   -   Mouse or Arrow Keys to move");
-    drawHighScores(20, height - 120);   // show high scores
+    drawHighScores(20, height - 100);
   }
   void onClick() {
     state = STATE_PLAYING;
@@ -28,11 +36,9 @@ class PlayingState extends GameState {
     drawBricks();
     updateBricks();
     paddle.display();
-    ball.display();
+    for (Ball b : balls) b.display();
 
-    // Draw power‑ups and multi‑balls
     for (PowerUp p : powerups) p.display();
-    for (Ball mb : multiBalls) mb.display();
 
     effects.updateAndDraw();
     popMatrix();
@@ -43,10 +49,11 @@ class PlayingState extends GameState {
 
 class WinningState extends GameState {
   void draw() {
+    // Freeze the ball but keep the last brick's fade and the burst playing out.
     drawBricks();
     updateBricks();
     paddle.display();
-    ball.display();
+    for (Ball b : balls) b.display();
     effects.updateAndDraw();
     drawHUD();
 
@@ -59,7 +66,7 @@ class GameOverState extends GameState {
   void draw() {
     drawBricks();
     drawCenteredScreen("GAME OVER", "Score: " + score + "   -   Click to restart");
-    drawHighScores(20, height - 120);
+    drawHighScores(20, height - 100);
   }
   void onClick() {
     resetGame();
@@ -70,7 +77,7 @@ class GameOverState extends GameState {
 class WinState extends GameState {
   void draw() {
     drawCenteredScreen("YOU WIN!", "Score: " + score + "   -   Click to restart");
-    drawHighScores(20, height - 120);
+    drawHighScores(20, height - 100);
   }
   void onClick() {
     resetGame();
@@ -78,7 +85,6 @@ class WinState extends GameState {
   }
 }
 
-// ########## HIGH SCORE INPUT STATE ##########
 class EnterHighScoreState extends GameState {
   void draw() {
     fill(0, 180);
@@ -98,8 +104,9 @@ class EnterHighScoreState extends GameState {
   void keyPressed() {
     if (key == ENTER || key == RETURN) {
       if (newHighScoreName.length() > 0) {
-        while (newHighScoreName.length() < 3) newHighScoreName += " ";
-        addHighScore(newHighScoreName, tempScore);
+        String initials = newHighScoreName.toUpperCase();
+        while (initials.length() < 3) initials += " ";
+        addHighScore(initials, tempScore);
         resetGame();
         state = STATE_START;
       }
@@ -111,6 +118,17 @@ class EnterHighScoreState extends GameState {
       if (newHighScoreName.length() < 3) {
         newHighScoreName += char(key);
       }
+    }
+  }
+  
+  void onClick() {
+    // Treat click as ENTER (submit)
+    if (newHighScoreName.length() > 0) {
+      String initials = newHighScoreName.toUpperCase();
+      while (initials.length() < 3) initials += " ";
+      addHighScore(initials, tempScore);
+      resetGame();
+      state = STATE_START;
     }
   }
 }

@@ -7,24 +7,17 @@ class Ball {
   float r;
   float angle = 0;
   PImage sprite;
-  boolean isMain = false;
 
   // Trail
   ArrayList<PVector> trailPos;
   ArrayList<Float> trailAngles;
   int TRAIL_LENGTH = 20;
 
-
   Ball(float startX, float startY, float radius, PImage img) {
-    this(startX, startY, radius, img, true);
-  }
-
-  Ball(float startX, float startY, float radius, PImage img, boolean main) {
     x = startX;
     y = startY;
     r = radius;
     sprite = img;
-    isMain = main;
     trailPos = new ArrayList<PVector>();
     trailAngles = new ArrayList<Float>();
   }
@@ -44,19 +37,17 @@ class Ball {
     x += vx;
     y += vy;
 
+    // Wall bounces, sound handled by game layer via Physics return
     if (x - r < 0) {
       x = r;
       vx = -vx;
-      sound.wallBounce();
     } else if (x + r > width) {
       x = width - r;
       vx = -vx;
-      sound.wallBounce();
     }
     if (y - r < 0) {
       y = r;
       vy = -vy;
-      sound.wallBounce();
     }
 
     angle += vx * 0.05;
@@ -73,8 +64,6 @@ class Ball {
   boolean isBelowScreen() {
     return y - r > height;
   }
-
-  // --- Bounce behavior (owns paddle/brick reflection per REQUIREMENTS) ---
 
   void bounceX() {
     vx = -vx;
@@ -117,20 +106,22 @@ class Ball {
   }
 
   void display() {
-    // Draw trail ghosts (same as before)
-    for (int i = 0; i < trailPos.size(); i++) {
-      PVector p = trailPos.get(i);
-      float a = trailAngles.get(i);
-      float alpha = map(i, 0, trailPos.size()-1, 20, 150);
-      float s = map(i, 0, trailPos.size()-1, 0.3, 0.9);
-      pushMatrix();
-      translate(p.x, p.y);
-      rotate(a);
-      scale(s);
-      tint(255, alpha);
-      image(sprite, -r, -r, r*2, r*2);
-      noTint();
-      popMatrix();
+    // Draw trail ghosts – guard against size 1 to avoid NaN
+    if (trailPos.size() > 1) {
+      for (int i = 0; i < trailPos.size(); i++) {
+        PVector p = trailPos.get(i);
+        float a = trailAngles.get(i);
+        float alpha = map(i, 0, trailPos.size()-1, 20, 150);
+        float s = map(i, 0, trailPos.size()-1, 0.3, 0.9);
+        pushMatrix();
+        translate(p.x, p.y);
+        rotate(a);
+        scale(s);
+        tint(255, alpha);
+        image(sprite, -r, -r, r*2, r*2);
+        noTint();
+        popMatrix();
+      }
     }
 
     // Draw the actual ball
@@ -141,6 +132,5 @@ class Ball {
     image(sprite, 0, 0, r * 2, r * 2);
     imageMode(CORNER);
     popMatrix();
-
   }
 }

@@ -3,44 +3,58 @@ import processing.sound.*;
 // Brick Breaker
 // A simple Breakout-style game. See REQUIREMENTS.md for scope.
 
+// State constants
 final int STATE_START = 0;
 final int STATE_PLAYING = 1;
 final int STATE_GAME_OVER = 2;
 final int STATE_WINNING = 3;   // brief transition: let the last fade + burst finish
 final int STATE_WIN = 4;
-final int STATE_ENTER_HIGH_SCORE = 5;   // High Score input state
+final int STATE_ENTER_HIGH_SCORE = 5;
 int state = STATE_START;
 GameState[] states;
+
+// Level progression
 int level = 1;
 final int MAX_LEVEL = 4;
 
+// Timing
 float winTimer = 0;
 final float WIN_DELAY = 45;     // ~0.75s at 60fps
 
-final int COLS = 8;
-final int ROWS = 5;
+// Brick layout constants
 final float BRICK_W = 90;
 final float BRICK_H = 30;
 final float BRICK_GAP = 4;
 final float BRICK_TOP = 60;
 
+// Ball & paddle constants
 final float BALL_RADIUS = 12;
 final float PADDLE_W = 100;
 final float PADDLE_H = 24;
 final float PADDLE_Y = 560;
 
-PImage ballImg, paddleImg;
-PImage[] brickImgs = new PImage[ROWS];
+// Gameplay constants
+final float SLOW_FACTOR = 0.7;
+final float DROP_RATE = 0.2;
+final float WIDE_PADDLE_WIDTH = 150;
+final int POINTS_MULTIPLIER = 20;
+final int EFFECT_DURATION = 180;   // 3 seconds at 60fps
 
+// Sprites
+PImage ballImg, paddleImg;
+PImage[] brickImgs = new PImage[5];
+
+// Game objects
 Paddle paddle;
-Ball ball;
-Brick[][] bricks = new Brick[ROWS][COLS];
+ArrayList<Ball> balls = new ArrayList<Ball>();  // unified ball list (main + multi)
+Brick[][] bricks;
 Physics physics;
 
+// Game state
 int score = 0;
 int lives = 3;
 
-// Juice: brick-destruction particle burst + screen shake, owned by Effects.
+// Visual effects
 Effects effects;
 color[] rowColors = {
   color(220, 60, 50),    // red
@@ -50,17 +64,15 @@ color[] rowColors = {
   color(60, 130, 220)    // blue
 };
 
-// Power-up globals
+// Power-ups
 ArrayList<PowerUp> powerups = new ArrayList<PowerUp>();
-ArrayList<Ball> multiBalls = new ArrayList<Ball>();
 int wideTimer = 0;
 int slowTimer = 0;
-final int EFFECT_DURATION = 180;   // 3 seconds at 60fps
 
-// Sound Manager (global)
+// Sound
 SoundManager sound;
 
-// High Score globals
+// High score input
 String newHighScoreName = "";
 int tempScore = 0;
 
@@ -101,10 +113,13 @@ int[][][] levelData = {
   }
 };
 
+// ======= SETUP ================================
+
 void setup() {
   size(800, 600);
   imageMode(CORNER);
 
+  // Load images
   ballImg = loadImage("ball.png");
   paddleImg = loadImage("paddle.png");
   brickImgs[0] = loadImage("brick_red.png");
@@ -114,15 +129,11 @@ void setup() {
   brickImgs[4] = loadImage("brick_blue.png");
 
   paddle = new Paddle((width - PADDLE_W) / 2, PADDLE_Y, PADDLE_W, PADDLE_H, paddleImg);
-  ball = new Ball(0, 0, BALL_RADIUS, ballImg);
-  ball.isMain = true;
   effects = new Effects();
   physics = new Physics();
 
-  // Initialize Sound Manager
   sound = new SoundManager(this);
 
-  // Load high scores from file
   loadHighScores();
 
   states = new GameState[6];
@@ -138,60 +149,44 @@ void setup() {
 
 void draw() {
   background(20);
-  // Update sound timers
   if (sound != null) sound.update();
   states[state].draw();
 }
+
+// ================= GAME LOGIC ===========================
 
 void updatePlaying() {
   // Update paddle
   paddle.update(paddleTargetX());
 
-  // Update main ball
-  ball.update();
-
-  // Update multi-balls
-  for (int i = multiBalls.size()-1; i >= 0; i--) {
-    Ball mb = multiBalls.get(i);
-    mb.update();
-    if (physics.resolvePaddle(mb, paddle)) {
+  // Update all balls
+  for (int i = balls.size()-1; i >= 0; i--) {
+    Ball b = balls.get(i);
+    b.update();
+    // Remove if fallen off screen
+    if (b.isBelowScreen()) {
+      balls.remove(i);
+      continue;
+    }
+    // Paddle collision
+    if (physics.resolvePaddle(b, paddle)) {
       paddle.squash();
       sound.paddleHit();
     }
-    if (mb.isBelowScreen()) {
-      multiBalls.remove(i);
-    }
-  }
-
-  // Paddle collision for main ball
-  if (physics.resolvePaddle(ball, paddle)) {
-    paddle.squash();
-    sound.paddleHit();
-  }
-
-  // Brick collisions for ALL balls
-  boolean anyBrickHit = false;
-  Brick hit;
-  
-  hit = physics.resolveBricks(ball, bricks);
-  if (hit != null) {
-    processBrickHit(hit);
-    anyBrickHit = true;
-  }
-  
-  for (Ball mb : multiBalls) {
-    hit = physics.resolveBricks(mb, bricks);
+    // Brick collisions
+    Brick hit = physics.resolveBricks(b, bricks);
     if (hit != null) {
-      processBrickHit(hit);
-      anyBrickHit = true;
+      boolean destroyed = hit.hit();   // returns true if brick died
+      if (destroyed) {
+        processBrickHit(hit);
+      }
     }
   }
 
-  // Check win condition
-  if (anyBrickHit && allBricksDestroyed()) {
-    level++;
-    if (level > MAX_LEVEL) {
-      // Check for high score before showing win screen
+  // Check win condition (all bricks destroyed)
+  if (allBricksDestroyed()) {
+    if (level >= MAX_LEVEL) {
+      // Check high score before showing win screen
       if (isHighScore(score)) {
         tempScore = score;
         newHighScoreName = "";
@@ -202,11 +197,11 @@ void updatePlaying() {
         sound.win();
       }
     } else {
+      level++;
       sound.levelUp();
       buildLevel(level);
-      resetBallAndPaddle();
+      resetBalls();
       powerups.clear();
-      multiBalls.clear();
     }
   }
 
@@ -221,7 +216,7 @@ void updatePlaying() {
       powerups.remove(i);
     }
   }
-  
+
   // Update timers
   if (wideTimer > 0) {
     wideTimer--;
@@ -229,15 +224,17 @@ void updatePlaying() {
   }
   if (slowTimer > 0) {
     slowTimer--;
+    if (slowTimer == 0) {
+      // Restore speed for all balls
+      for (Ball b : balls) {
+        b.vx /= SLOW_FACTOR;
+        b.vy /= SLOW_FACTOR;
+      }
+    }
   }
 
-  // Check if any ball is still alive
-  boolean anyAlive = !ball.isBelowScreen();
-  for (Ball mb : multiBalls) {
-    if (!mb.isBelowScreen()) anyAlive = true;
-  }
-
-  if (!anyAlive) {
+  // Check life loss – only when no balls remain
+  if (balls.isEmpty()) {
     lives--;
     if (lives <= 0) {
       sound.gameOver();
@@ -251,12 +248,70 @@ void updatePlaying() {
       }
     } else {
       sound.lifeLost();
-      resetBallAndPaddle();
-      multiBalls.clear();
+      resetBalls();
     }
   }
 }
 
+void processBrickHit(Brick hit) {
+  if (hit == null) return;
+  score += hit.points;
+  sound.brickHit();
+  effects.burst(hit.x + hit.w/2, hit.y + hit.h/2, hit.burstColor);
+  
+  if (random(1) < DROP_RATE) {
+    int type = (int) random(4);
+    powerups.add(new PowerUp(hit.x + hit.w/2, hit.y + hit.h/2, type));
+  }
+}
+
+void applyPowerUp(int type) {
+  switch(type) {
+    case PowerUp.WIDER:
+      paddle.w = WIDE_PADDLE_WIDTH;
+      wideTimer = EFFECT_DURATION;
+      sound.powerUp();
+      break;
+    case PowerUp.EXTRA_LIFE:
+      lives++;
+      sound.powerUp();
+      break;
+    case PowerUp.SLOW_BALL:
+      for (Ball b : balls) {
+        b.vx *= SLOW_FACTOR;
+        b.vy *= SLOW_FACTOR;
+      }
+      slowTimer = EFFECT_DURATION;
+      sound.powerUp();
+      break;
+    case PowerUp.MULTI_BALL:
+      if (!balls.isEmpty()) {
+        Ball ref = balls.get(0);
+        for (int i = 0; i < 2; i++) {
+          Ball nb = new Ball(ref.x, ref.y, ref.r, ballImg);
+          // Upward cone: between -60 and +60 degrees from straight up
+          float angle = random(-PI/3, PI/3) - PI/2;
+          float spd = sqrt(ref.vx*ref.vx + ref.vy*ref.vy);
+          if (spd < 1) spd = 4;
+          nb.vx = cos(angle) * spd;
+          nb.vy = sin(angle) * spd;
+          balls.add(nb);
+        }
+        sound.powerUp();
+      }
+      break;
+  }
+}
+
+void resetBalls() {
+  balls.clear();
+  Ball main = new Ball(width/2, PADDLE_Y - BALL_RADIUS - 1, BALL_RADIUS, ballImg);
+  main.launch();
+  balls.add(main);
+}
+
+// Translate raw input (arrow keys, else mouse) into the paddle's desired
+// left-edge X. Keeps input handling in the main tab, out of the Paddle class.
 float paddleTargetX() {
   if (keyPressed && (keyCode == LEFT || keyCode == RIGHT)) {
     return paddle.x + (keyCode == LEFT ? -paddle.speed : paddle.speed);
@@ -265,26 +320,26 @@ float paddleTargetX() {
 }
 
 boolean allBricksDestroyed() {
-  for (int row = 0; row < bricks.length; row++) {
-    for (int col = 0; col < bricks[row].length; col++) {
-      if (bricks[row][col].alive) return false;
+  for (int r = 0; r < bricks.length; r++) {
+    for (int c = 0; c < bricks[r].length; c++) {
+      if (bricks[r][c].alive) return false;
     }
   }
   return true;
 }
 
 void updateBricks() {
-  for (int row = 0; row < bricks.length; row++) {
-    for (int col = 0; col < bricks[row].length; col++) {
-      bricks[row][col].update();
+  for (int r = 0; r < bricks.length; r++) {
+    for (int c = 0; c < bricks[r].length; c++) {
+      bricks[r][c].update();
     }
   }
 }
 
 void drawBricks() {
-  for (int row = 0; row < bricks.length; row++) {
-    for (int col = 0; col < bricks[row].length; col++) {
-      bricks[row][col].display();
+  for (int r = 0; r < bricks.length; r++) {
+    for (int c = 0; c < bricks[r].length; c++) {
+      bricks[r][c].display();
     }
   }
 }
@@ -311,52 +366,7 @@ void drawCenteredScreen(String title, String subtitle) {
   text(subtitle, width / 2, height / 2 + 30);
 }
 
-void applyPowerUp(int type) {
-  switch(type) {
-    case PowerUp.WIDER:
-      paddle.w = 150;
-      wideTimer = EFFECT_DURATION;
-      sound.powerUp();
-      break;
-    case PowerUp.EXTRA_LIFE:
-      lives++;
-      sound.powerUp();
-      break;
-    case PowerUp.SLOW_BALL:
-      float speed = sqrt(ball.vx*ball.vx + ball.vy*ball.vy);
-      if (speed > 1) {
-        ball.vx *= 0.7;
-        ball.vy *= 0.7;
-      }
-      slowTimer = EFFECT_DURATION;
-      sound.powerUp();
-      break;
-    case PowerUp.MULTI_BALL:
-      for (int i = 0; i < 2; i++) {
-        Ball nb = new Ball(ball.x, ball.y, ball.r, ballImg);
-        float angle = random(TWO_PI);
-        float spd = sqrt(ball.vx*ball.vx + ball.vy*ball.vy);
-        nb.vx = cos(angle) * spd;
-        nb.vy = sin(angle) * spd;
-        multiBalls.add(nb);
-      }
-      sound.powerUp();
-      break;
-  }
-}
-
-void processBrickHit(Brick hit) {
-  if (hit == null) return;
-  hit.destroy();
-  score += hit.points;
-  sound.brickHit();
-  effects.burst(hit.x + hit.w/2, hit.y + hit.h/2, hit.burstColor);
-  
-  if (random(1) < 0.2) {
-    int type = (int) random(4);
-    powerups.add(new PowerUp(hit.x + hit.w/2, hit.y + hit.h/2, type));
-  }
-}
+// ================== LEVEL BUILDING ================
 
 void resetGame() {
   score = 0;
@@ -365,15 +375,15 @@ void resetGame() {
   winTimer = 0;
   level = 1;
   powerups.clear();
-  multiBalls.clear();
   wideTimer = 0;
   slowTimer = 0;
+  paddle.w = PADDLE_W;
   buildLevel(level);
-  resetBallAndPaddle();
+  resetBalls();
 }
 
 void buildLevel(int lvl) {
-  int index = (lvl - 1) % levelData.length;
+  int index = lvl - 1;   // 0-based, safe because lvl <= MAX_LEVEL
   int rows = levelData[index].length;
   int cols = levelData[index][0].length;
   
@@ -384,15 +394,16 @@ void buildLevel(int lvl) {
   
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
-      int hitPoints = levelData[index][r][c];
-      if (hitPoints > 0) {
+      int hp = levelData[index][r][c];
+      if (hp > 0) {
         float bx = offsetLeft + c * (BRICK_W + BRICK_GAP);
         float by = BRICK_TOP + r * (BRICK_H + BRICK_GAP);
-        int points = hitPoints * 20;
+        int pts = hp * POINTS_MULTIPLIER;
         color col = rowColors[r % rowColors.length];
         PImage img = brickImgs[r % brickImgs.length];
-        bricks[r][c] = new Brick(bx, by, BRICK_W, BRICK_H, img, points, col, hitPoints);
+        bricks[r][c] = new Brick(bx, by, BRICK_W, BRICK_H, img, pts, col, hp);
       } else {
+        // dummy brick, alive = false
         bricks[r][c] = new Brick(0, 0, 0, 0, null, 0, color(0), 0);
         bricks[r][c].alive = false;
       }
@@ -402,17 +413,22 @@ void buildLevel(int lvl) {
 
 void resetBallAndPaddle() {
   paddle.x = (width - paddle.w) / 2;
-  ball.x = width / 2;
-  ball.y = PADDLE_Y - BALL_RADIUS - 1;
-  ball.launch();
-  multiBalls.clear();
+  if (!balls.isEmpty()) {
+    Ball main = balls.get(0);
+    main.x = width / 2;
+    main.y = PADDLE_Y - BALL_RADIUS - 1;
+    main.launch();
+  } else {
+    resetBalls();
+  }
 }
+
+// ================= INPUT ==========================
 
 void mousePressed() {
   states[state].onClick();
 }
 
-// Key handling for high score input
 void keyPressed() {
   if (state == STATE_ENTER_HIGH_SCORE) {
     states[state].keyPressed();
