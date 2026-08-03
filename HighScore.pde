@@ -1,8 +1,5 @@
 import java.util.Collections;
 
-// High score management: top 5 scores with initials.
-// Saves to scores.txt in the sketch folder.
-
 class HighScore implements Comparable<HighScore> {
   String name;
   int score;
@@ -28,7 +25,11 @@ void loadHighScores() {
         highScores.add(new HighScore(parts[0], int(parts[1])));
       }
     }
-    Collections.sort(highScores);   // <-- fixed here
+    Collections.sort(highScores);
+    // Trim to top 5
+    while (highScores.size() > 5) {
+      highScores.remove(highScores.size()-1);
+    }
   }
 }
 
@@ -42,15 +43,16 @@ void saveHighScores() {
 
 void addHighScore(String name, int score) {
   highScores.add(new HighScore(name, score));
-  Collections.sort(highScores);     // <-- fixed here
-  if (highScores.size() > 5) {
+  Collections.sort(highScores);
+  while (highScores.size() > 5) {
     highScores.remove(highScores.size()-1);
   }
   saveHighScores();
 }
 
 boolean isHighScore(int score) {
-  if (highScores.size() < 5) return true;
+  // If less than 5 scores, any positive score qualifies
+  if (highScores.size() < 5) return score > 0;
   return score > highScores.get(highScores.size()-1).score;
 }
 
