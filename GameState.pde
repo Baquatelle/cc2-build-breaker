@@ -10,9 +10,10 @@ class StartState extends GameState {
   void draw() {
     drawBricks();
     paddle.display();
-    ball.display();
+    // Draw the main ball (index 0) – only one exists on start screen
+    if (!balls.isEmpty()) balls.get(0).display();
     drawCenteredScreen("BRICK BREAKER", "Click to start   -   Mouse or Arrow Keys to move");
-    drawHighScores(20, height - 120);   // show high scores
+    drawHighScores(20, height - 100);   // moved up to avoid paddle overlap
   }
   void onClick() {
     state = STATE_PLAYING;
@@ -28,11 +29,11 @@ class PlayingState extends GameState {
     drawBricks();
     updateBricks();
     paddle.display();
-    ball.display();
+    // Draw all balls (main + multi)
+    for (Ball b : balls) b.display();
 
-    // Draw power‑ups and multi‑balls
+    // Draw power-ups
     for (PowerUp p : powerups) p.display();
-    for (Ball mb : multiBalls) mb.display();
 
     effects.updateAndDraw();
     popMatrix();
@@ -46,7 +47,7 @@ class WinningState extends GameState {
     drawBricks();
     updateBricks();
     paddle.display();
-    ball.display();
+    for (Ball b : balls) b.display();
     effects.updateAndDraw();
     drawHUD();
 
@@ -59,7 +60,7 @@ class GameOverState extends GameState {
   void draw() {
     drawBricks();
     drawCenteredScreen("GAME OVER", "Score: " + score + "   -   Click to restart");
-    drawHighScores(20, height - 120);
+    drawHighScores(20, height - 100);
   }
   void onClick() {
     resetGame();
@@ -70,7 +71,7 @@ class GameOverState extends GameState {
 class WinState extends GameState {
   void draw() {
     drawCenteredScreen("YOU WIN!", "Score: " + score + "   -   Click to restart");
-    drawHighScores(20, height - 120);
+    drawHighScores(20, height - 100);
   }
   void onClick() {
     resetGame();
@@ -78,7 +79,6 @@ class WinState extends GameState {
   }
 }
 
-// ########## HIGH SCORE INPUT STATE ##########
 class EnterHighScoreState extends GameState {
   void draw() {
     fill(0, 180);

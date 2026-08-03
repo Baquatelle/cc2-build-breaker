@@ -25,8 +25,9 @@ class PowerUp {
 
   // Check if this power-up has hit the paddle.
   boolean hitsPaddle(Paddle p) {
-    return x + size > p.x && x - size < p.x + p.w &&
-           y + size > p.y && y - size < p.y + p.h;
+    float half = size/2;
+    return x + size > p.x && x - half < p.x + p.w &&
+           y + half > p.y && y - half < p.y + p.h;
   }
 
   void display() {
