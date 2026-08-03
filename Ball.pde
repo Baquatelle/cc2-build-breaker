@@ -1,5 +1,3 @@
-import processing.sound.*;
-
 class Ball {
   float x, y;
   float prevX, prevY;

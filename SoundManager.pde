@@ -1,53 +1,41 @@
-// Simple sound manager using Processing's Sound library.
-// Plays short beeps for game events.
-
-import processing.sound.*;
-
-SoundManager soundManager;
+// Maps game events to sounds. Every clip is synthesized once here at startup,
+// so playing one during the game is just a queue push (see Tone.pde).
+//
+// Multi-note events render as a single clip, which is why their notes actually
+// sound in sequence. The previous oscillator-based version restarted one shared
+// oscillator per note, so only the last note of a sequence was ever audible.
 
 class SoundManager {
-  AudioDevice device;
-  SinOsc osc;
-  float freq = 0;
-  float duration = 0.1;   // seconds
-  float amp = 0.3;
-  boolean isPlaying = false;
-  float startTime = 0;
-  
-  SoundManager(PApplet parent) {
-    device = new AudioDevice(parent, 44100, 16);
-    osc = new SinOsc(parent);
-    osc.amp(amp);
+  Tone tone;
+
+  byte[] paddleHitClip;
+  byte[] brickHitClip;
+  byte[] wallBounceClip;
+  byte[] lifeLostClip;
+  byte[] levelUpClip;
+  byte[] powerUpClip;
+  byte[] gameOverClip;
+  byte[] winClip;
+
+  SoundManager() {
+    tone = new Tone();
+
+    paddleHitClip   = tone.render(new float[] { 600 }, 0.08);
+    brickHitClip    = tone.render(new float[] { 900 }, 0.06);
+    wallBounceClip  = tone.render(new float[] { 400 }, 0.05);
+    lifeLostClip    = tone.render(new float[] { 200 }, 0.3);
+    levelUpClip     = tone.render(new float[] { 1200, 1500 }, 0.15);
+    powerUpClip     = tone.render(new float[] { 800, 1000 }, 0.1);
+    gameOverClip    = tone.render(new float[] { 100, 80 }, 0.5);
+    winClip         = tone.render(new float[] { 600, 800, 1000 }, 0.15);
   }
-  
-  // Play a tone at given frequency for given duration (in seconds)
-  void playTone(float frequency, float dur) {
-    freq = frequency;
-    duration = dur;
-    osc.freq(freq);
-    osc.play();
-    startTime = millis() / 1000.0;
-    isPlaying = true;
-  }
-  
-  // Call this every frame to stop the tone after duration
-  void update() {
-    if (isPlaying) {
-      float now = millis() / 1000.0;
-      if (now - startTime >= duration) {
-        osc.stop();
-        isPlaying = false;
-      }
-    }
-  }
-  
-  // Convenience methods
-  void paddleHit()  { playTone(600, 0.08); }
-  void brickHit()   { playTone(900, 0.06); }
-  void wallBounce() { playTone(400, 0.05); }
-  void lifeLost()   { playTone(200, 0.3); }
-  void levelUp()    { playTone(1200, 0.15); playTone(1500, 0.15); } // two beeps
-  void powerUp()    { playTone(800, 0.1); playTone(1000, 0.1); }
-  void gameOver()   { playTone(100, 0.5); playTone(80, 0.5); }
-  void win()        { playTone(600, 0.15); playTone(800, 0.15); playTone(1000, 0.15); }
+
+  void paddleHit()  { tone.play(paddleHitClip); }
+  void brickHit()   { tone.play(brickHitClip); }
+  void wallBounce() { tone.play(wallBounceClip); }
+  void lifeLost()   { tone.play(lifeLostClip); }
+  void levelUp()    { tone.play(levelUpClip); }
+  void powerUp()    { tone.play(powerUpClip); }
+  void gameOver()   { tone.play(gameOverClip); }
+  void win()        { tone.play(winClip); }
 }

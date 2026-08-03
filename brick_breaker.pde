@@ -1,5 +1,3 @@
-import processing.sound.*;
-
 // Brick Breaker
 // A simple Breakout-style game. See REQUIREMENTS.md for scope.
 
@@ -120,7 +118,7 @@ void setup() {
   physics = new Physics();
 
   // Initialize Sound Manager
-  sound = new SoundManager(this);
+  sound = new SoundManager();
 
   // Load high scores from file
   loadHighScores();
@@ -138,8 +136,6 @@ void setup() {
 
 void draw() {
   background(20);
-  // Update sound timers
-  if (sound != null) sound.update();
   states[state].draw();
 }
 
