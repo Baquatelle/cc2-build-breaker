@@ -43,14 +43,14 @@ The game runs as a Processing sketch, playable start to finish: start, play, adv
 
 | Feature | Description |
 |---------|-------------|
-| 🏓 **Classic Breakout Mechanics** | Tight paddle deflection, ball physics, and screen shake. |
-| 🎯 **Ball Trail** | Fading ghost trail behind the ball (uses Arrays + Transformation). |
-| 💥 **Power‑ups** | Four types drop from bricks: **W**ider paddle, **+** Extra life, **S**low ball, **M**ulti‑ball. |
-| 📈 **Multiple Levels** | 4 unique layouts with normal and hard (2‑hit) bricks. |
-| 🎵 **Sound Effects** | Audio feedback for paddle hits, brick breaks, wall bounces, power‑ups, level ups, and game events. |
-| 🏆 **High Score Table** | Top 5 scores saved to `scores.txt`; enter your initials on a new high score. |
-| 💫 **Juice** | Particle bursts, screen shake, paddle squash, and brick death animations. |
-| 🎮 **Mouse + Keyboard** | Move paddle with mouse or arrow keys (mix freely). |
+| **Classic Breakout Mechanics** | Tight paddle deflection, ball physics, and screen shake. |
+| **Ball Trail** | Fading ghost trail behind the ball (uses Arrays + Transformation). |
+| **Power‑ups** | Four types drop from bricks: **W**ider paddle, **+** Extra life, **S**low ball, **M**ulti‑ball. |
+| **Multiple Levels** | 4 unique layouts with normal and hard (2‑hit) bricks. |
+| **Sound Effects** | Audio feedback for paddle hits, brick breaks, wall bounces, power‑ups, level ups, and game events. |
+| **High Score Table** | Top 5 scores saved to `scores.txt`; enter your initials on a new high score. |
+| **Juice** | Particle bursts, screen shake, paddle squash, and brick death animations. |
+| **Mouse + Keyboard** | Move paddle with mouse or arrow keys (mix freely). |
 
 ---
 
@@ -151,31 +151,18 @@ The current level is displayed in the HUD (top‑center).
 
 Each class lives in its own file (Processing loads them as tabs of one sketch):
 
-brick_breaker/
-├── brick_breaker.pde # Main sketch: globals, setup(), draw(), HUD, input, helpers
-├── GameState.pde # State machine: Start / Playing / Winning / GameOver / Win / EnterHighScore
-├── Ball.pde # Ball: movement, bounce logic, trail (ArrayList + transformations)
-├── Brick.pde # Brick: multi‑hit support, death animation, hit counter
-├── Paddle.pde # Paddle: movement, clamping, squash animation
-├── Physics.pde # Collision detection + physical response (reflection)
-├── Effects.pde # Particle bursts + screen shake ("juice")
-├── Particle.pde # A single short‑lived burst particle
-├── PowerUp.pde # Power‑up: types (W, +, S, M), falling, paddle collision, display
-├── SoundManager.pde # Maps game events to pre-rendered tone clips
-├── Tone.pde # PCM tone synth + playback thread (javax.sound.sampled)
-├── HighScore.pde # High score management: top‑5, file I/O, display
-├── REQUIREMENTS.md # Original scope & requirements
-├── README.md # This file
-└── data/
-├── ball.png
-├── paddle.png
-├── brick_red.png
-├── brick_orange.png
-├── brick_yellow.png
-├── brick_green.png
-├── brick_blue.png
-└── ASSET_LICENSE.txt
-
+* brick_breaker.pde # Main sketch: globals, setup(), draw(), HUD, input, helpers
+* GameState.pde # State machine: Start / Playing / Winning / GameOver / Win / EnterHighScore
+* Ball.pde # Ball: movement, bounce logic, trail (ArrayList + transformations)
+* Brick.pde # Brick: multi‑hit support, death animation, hit counter
+* Paddle.pde # Paddle: movement, clamping, squash animation
+* Physics.pde # Collision detection + physical response (reflection)
+* Effects.pde # Particle bursts + screen shake ("juice")
+* Particle.pde # A single short‑lived burst particle
+* PowerUp.pde # Power‑up: types (W, +, S, M), falling, paddle collision, display
+* SoundManager.pde # Maps game events to pre-rendered tone clips
+* Tone.pde # PCM tone synth + playback thread (javax.sound.sampled)
+v HighScore.pde # High score management: top‑5, file I/O, display
 
 ---
 
@@ -253,9 +240,8 @@ Licensed [CC0](http://creativecommons.org/publicdomain/zero/1.0/) (public domain
 
 ## Credits & Acknowledgments
 
-- **Original architecture**: Teammate (s-01141) – built the core state machine, physics layer, and sprite rendering.
-- **Feature extensions**: s-01123 – added ball trail, power‑ups, multi‑ball, multiple levels, sound effects, and high score table.
-- **Assets**: ImagineLabs (OpenGameArt) – CC0 brick/paddle/ball sprites.
+- **Original architecture**: Abel Gabor (s-01123) – built the core state machine, physics layer, and sprite rendering.
+- **Feature extensions**: Augustine Atta Abrefa (s-01141) – added ball trail, power‑ups, multi‑ball, multiple levels, sound effects, and high score table.
 
 ---
 
